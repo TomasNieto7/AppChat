@@ -450,32 +450,99 @@ public class MainFrame extends JFrame {
     }
 
     public void sendDoc(String doc) throws IOException {
-        output.writeUTF("d^" + doc);
 
         try {
             File file = new File(doc);
-            long fileSize = file.length();  // Obtener el tamaño del archivo
+            // Verificar si el archivo existe
+            if (file.exists()) {
+                output.writeUTF("d^" + doc);
 
-            // Enviar el tamaño del archivo
-            DataOutputStream netOutDoc = new DataOutputStream(socket.getOutputStream());
-            netOutDoc.writeLong(fileSize);
+                long fileSize = file.length();  // Obtener el tamaño del archivo
+                if (fileSize <= 50000000) {
+                    System.out.println(fileSize);
 
-            // Enviar el archivo
-            FileInputStream fileInputStream = new FileInputStream(file);
-            byte[] buffer = new byte[4096];
-            int bytesRead;
+                    // Enviar el tamaño del archivo
+                    DataOutputStream netOutDoc = new DataOutputStream(socket.getOutputStream());
+                    netOutDoc.writeLong(fileSize);
 
-            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                netOutDoc.write(buffer, 0, bytesRead);
+                    // Enviar el archivo
+                    FileInputStream fileInputStream = new FileInputStream(file);
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+
+                    while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                        netOutDoc.write(buffer, 0, bytesRead);
+                    }
+                    System.out.println("Se envio");
+                    fileInputStream.close();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Ups, este archivo supera el tamaño maximo (50MB)", "Alerta", JOptionPane.WARNING_MESSAGE);
+                }
+
+            } else {
+                JOptionPane.showMessageDialog(null, "Archivo no encontrado", "Alerta", JOptionPane.WARNING_MESSAGE);
             }
-            System.out.println("Se envio");
-            fileInputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void receiverDoc(String[] tokens) throws IOException {
+        // Recibir archivo
+        InputStream inputStream = socket.getInputStream();
+        DataInputStream dataInputStream = new DataInputStream(inputStream);
+
+        // Leer el tamaño del archivo
+        long fileSize = dataInputStream.readLong();
+
+        FileOutputStream fileOutputStream = new FileOutputStream(tokens[2]);
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        long totalBytesRead = 0;
+
+        // Leer el archivo hasta que se hayan recibido todos los bytes
+        while (totalBytesRead < fileSize && (bytesRead = inputStream.read(buffer)) != -1) {
+            fileOutputStream.write(buffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
+        }
+
+        renderRes(tokens[1] + "^" + tokens[2]);
+        fileOutputStream.close();
+    }
+
+    public void sendDocDM(String doc) throws IOException {
+
+        try {
+            File file = new File(doc);
+            // Verificar si el archivo existe
+            if (file.exists()) {
+                output.writeUTF("d^" + doc);
+
+                long fileSize = file.length();  // Obtener el tamaño del archivo
+
+                // Enviar el tamaño del archivo
+                DataOutputStream netOutDoc = new DataOutputStream(socket.getOutputStream());
+                netOutDoc.writeLong(fileSize);
+
+                // Enviar el archivo
+                FileInputStream fileInputStream = new FileInputStream(file);
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                    netOutDoc.write(buffer, 0, bytesRead);
+                }
+                System.out.println("Se envio");
+                fileInputStream.close();
+            } else {
+                JOptionPane.showMessageDialog(null, "Archivo no encontrado", "Alerta", JOptionPane.WARNING_MESSAGE);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void receiverDocDM(String[] tokens) throws IOException {
         // Recibir archivo
         InputStream inputStream = socket.getInputStream();
         DataInputStream dataInputStream = new DataInputStream(inputStream);
