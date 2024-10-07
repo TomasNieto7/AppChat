@@ -8,7 +8,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -312,6 +317,22 @@ public class MainFrame extends JFrame {
         titlePanel.setLayout(new GridLayout(4, 1, 5, 5));
         titlePanel.add(lblFirstName);
 
+        JButton btnDoc = new JButton("Enviar Documento");
+        btnDoc.setFont(mainFont);
+        btnDoc.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    message = textMessage.getText();
+                    sendDoc(message);
+                    textMessage.setText("");
+                } catch (IOException ioe) {
+                    System.out.println("Error al enviar mensaje: " + ioe.getMessage());
+                }
+            }
+        });
+
         JButton btnOK = new JButton("Enviar");
         btnOK.setFont(mainFont);
         btnOK.addActionListener(new ActionListener() {
@@ -333,6 +354,7 @@ public class MainFrame extends JFrame {
         buttonsPanel.add(textMessage, BorderLayout.CENTER);
 
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonWrapper.add(btnDoc);
         buttonWrapper.add(btnOK);
         buttonsPanel.add(buttonWrapper, BorderLayout.SOUTH);
 
@@ -384,11 +406,13 @@ public class MainFrame extends JFrame {
                 while (true) {
                     String messageFromServer = input.readUTF();
                     System.out.println(messageFromServer);
+                    String[] tokens = messageFromServer.split("\\^");
                     if (messageFromServer.startsWith("dm")) {
                         renderResDM(messageFromServer);
                     } else if (messageFromServer.startsWith("openDM")) {
-                        String[] tokens = messageFromServer.split("\\^");
                         openDM(tokens[1]);
+                    } else if (messageFromServer.startsWith("d")) {
+                        receiverDoc(tokens);
                     } else {
                         renderRes(messageFromServer);
                     }
@@ -423,6 +447,55 @@ public class MainFrame extends JFrame {
 
     public void sendMessageDM(String msg) throws IOException {
         output.writeUTF("dm^" + msg);
+    }
+
+    public void sendDoc(String doc) throws IOException {
+        output.writeUTF("d^" + doc);
+
+        try {
+            File file = new File(doc);
+            long fileSize = file.length();  // Obtener el tamaño del archivo
+
+            // Enviar el tamaño del archivo
+            DataOutputStream netOutDoc = new DataOutputStream(socket.getOutputStream());
+            netOutDoc.writeLong(fileSize);
+
+            // Enviar el archivo
+            FileInputStream fileInputStream = new FileInputStream(file);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                netOutDoc.write(buffer, 0, bytesRead);
+            }
+            System.out.println("Se envio");
+            fileInputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void receiverDoc(String[] tokens) throws IOException {
+        // Recibir archivo
+        InputStream inputStream = socket.getInputStream();
+        DataInputStream dataInputStream = new DataInputStream(inputStream);
+
+        // Leer el tamaño del archivo
+        long fileSize = dataInputStream.readLong();
+
+        FileOutputStream fileOutputStream = new FileOutputStream(tokens[2]);
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        long totalBytesRead = 0;
+
+        // Leer el archivo hasta que se hayan recibido todos los bytes
+        while (totalBytesRead < fileSize && (bytesRead = inputStream.read(buffer)) != -1) {
+            fileOutputStream.write(buffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
+        }
+
+        renderRes(tokens[1] + "^" + tokens[2]);
+        fileOutputStream.close();
     }
 
     public void running(String[] args) {

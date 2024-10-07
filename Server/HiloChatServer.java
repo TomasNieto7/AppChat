@@ -1,7 +1,11 @@
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.util.List;
 import java.util.Timer;
@@ -149,6 +153,56 @@ public class HiloChatServer implements Runnable {
         return hilo.isAlive();
     }
 
+    public void receiverDoc(String[] tokens) throws IOException {
+        InputStream inputStream = socket.getInputStream();
+        DataInputStream dataInputStream = new DataInputStream(inputStream);
+
+        // Leer el tamaño del archivo
+        long fileSize = dataInputStream.readLong();
+
+        FileOutputStream fileOutputStream = new FileOutputStream(tokens[1]);
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        long totalBytesRead = 0;
+
+        // Leer el archivo hasta que se hayan recibido todos los bytes
+        while (totalBytesRead < fileSize && (bytesRead = inputStream.read(buffer)) != -1) {
+            fileOutputStream.write(buffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
+        }
+
+        System.out.println("Archivo recibido y guardado.");
+        fileOutputStream.close();
+        sendDoc(tokens);
+    }
+
+    public void sendDoc(String[] tokens) throws IOException {
+        // Seleccionar archivo para enviar
+        sendMsg(tokens[0] + "^" + name + ":^" + tokens[1]);
+        try {
+            File file = new File(tokens[1]);
+            long fileSize = file.length();  // Obtener el tamaño del archivo
+
+            for (Socket soc : vector) {
+                // Enviar el tamaño del archivo
+                DataOutputStream netOutDoc = new DataOutputStream(soc.getOutputStream());
+                netOutDoc.writeLong(fileSize);
+                // Enviar el archivo
+                FileInputStream fileInputStream = new FileInputStream(file);
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                    netOutDoc.write(buffer, 0, bytesRead);
+                }
+                System.out.println("Archivo enviado.");
+                fileInputStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private String options(String res, String[] tokens) throws IOException {
         switch (tokens[0]) {
             case "p":
@@ -172,6 +226,10 @@ public class HiloChatServer implements Runnable {
                 break;
             case "open":
                 sendFlagDM(tokens);
+                res = "-1";
+                break;
+            case "d":
+                receiverDoc(tokens);
                 res = "-1";
                 break;
             default:
