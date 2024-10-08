@@ -34,6 +34,9 @@ public class MainFrame extends JFrame {
     private String userName;
     private List<JFrame> dmsFrame = new ArrayList<>();
     private List<JPanel> dmsPanel = new ArrayList<>();
+    private List<String> userList = new ArrayList<>();
+    private List<JPanel> listPanels = new ArrayList<>();
+    private JPanel titlePanel = new JPanel();
 
     public MainFrame(Socket socket) throws IOException {
         this.socket = socket;
@@ -42,6 +45,7 @@ public class MainFrame extends JFrame {
     }
 
     public void openDM(String name) throws IOException {
+        System.out.println("name: " + name);
         dmFrame(name);
     }
 
@@ -159,17 +163,78 @@ public class MainFrame extends JFrame {
 
         JPanel resPanelU;
 
-        if (tokens[0].equals("l")) {
-            resPanelU = createListPanel(tokens[1], tokens[2], tokens[3]);
-            resPanel.add(resPanelU);
-        } else {
-            resPanelU = createResPanel(tokens[0], tokens[1]);
-            resPanel.add(resPanelU);
-        }
+        resPanelU = createResPanel(tokens[0], tokens[1]);
+        resPanel.add(resPanelU);
 
         // Añadir el panel al contenedor principal
         // Actualizar la interfaz gráfica
         SwingUtilities.updateComponentTreeUI(resPanel);
+    }
+
+    public void deleteUserList(String message) {
+        String[] tokens = message.split("\\^");
+        String userDelete = null;
+        for (String user : userList) {
+            if (user.equals(tokens[2])) {
+                userDelete = user;
+            }
+        }
+        if (!userDelete.equals(null)) {
+            userList.remove(userDelete);
+            deleteUserPanelList(userDelete);
+        }
+    }
+
+    public void deleteUserPanelList(String userDelete) {
+        int indexDelete = 0;
+        JPanel deletePanel = null;
+        for (JPanel listPanel : listPanels) {
+            // Obtén el segundo componente, que es nameUserButton
+            Component secondComponent = listPanel.getComponent(1);
+
+            // Verifica si es un JButton y obtén su texto
+            if (secondComponent instanceof JButton) {
+                JButton nameUserButton = (JButton) secondComponent;
+                String userConnected = nameUserButton.getText();
+                if (userConnected.equals(userDelete)) {
+                    System.out.println("llego aqui");
+                    indexDelete = listPanels.indexOf(listPanel);
+                    deletePanel = listPanel;
+                }
+            }
+        }
+        if (deletePanel != null) {
+            listPanels.remove(deletePanel);
+            titlePanel.remove(deletePanel);
+            SwingUtilities.updateComponentTreeUI(titlePanel);
+        }
+
+    }
+
+    public void addUserList(String message) {
+        String[] tokens = message.split("\\^");
+        for (String user : userList) {
+            if (user.equals(tokens[2])) {
+                return;
+            }
+        }
+        userList.add(tokens[2]);
+        renderList(message);
+
+    }
+
+    public void renderList(String message) {
+        String[] tokens = message.split("\\^");
+
+        JPanel listPanel;
+
+        listPanel = createListPanel("-", tokens[2], " is connected");
+        titlePanel.add(listPanel);
+        listPanels.add(listPanel);
+        System.out.println("user added");
+
+        SwingUtilities.updateComponentTreeUI(titlePanel);
+
     }
 
     public void dmFrame(String dmUser) throws IOException {
@@ -329,8 +394,10 @@ public class MainFrame extends JFrame {
         textMessage.setFont(mainFont);
         textMessage.setPreferredSize(new Dimension(400, 40));
 
-        JPanel titlePanel = new JPanel();
-        titlePanel.setLayout(new GridLayout(4, 1, 5, 5));
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.PAGE_AXIS));
+        titlePanel.setPreferredSize(new Dimension(400, 200));
+        // resPanel.setBackground(Color.black);
+        JScrollPane scrollPaneList = new JScrollPane(titlePanel);
         titlePanel.add(lblFirstName);
 
         JButton btnDoc = new JButton("Enviar Documento");
@@ -380,7 +447,7 @@ public class MainFrame extends JFrame {
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
-        mainPanel.add(titlePanel, BorderLayout.NORTH);
+        mainPanel.add(scrollPaneList, BorderLayout.NORTH);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
 
@@ -423,17 +490,55 @@ public class MainFrame extends JFrame {
                     String messageFromServer = input.readUTF();
                     System.out.println(messageFromServer);
                     String[] tokens = messageFromServer.split("\\^");
-                    if (messageFromServer.startsWith("dm")) {
-                        renderResDM(messageFromServer);
-                    } else if (messageFromServer.startsWith("openDM")) {
-                        openDM(tokens[1]);
-                    } else if (tokens[0].equals("d")) {
-                        receiverDoc(tokens);
-                    } else if (tokens[0].equals("ddm")) {
-                        receiverDocDM(tokens);
-                    } else {
-                        renderRes(messageFromServer);
+                    System.out.println(tokens[0]);
+                    switch (tokens[0]) {
+                        case "dm":
+                            renderResDM(messageFromServer);
+                            break;
+                        case "openDM":
+                            openDM(tokens[1]);
+                            break;
+                        case "d":
+                            receiverDoc(tokens);
+                            break;
+                        case "ddm":
+                            receiverDocDM(tokens);
+                            break;
+                        case "l":
+                            // renderList(messageFromServer);
+                            addUserList(messageFromServer);
+                            break;
+                        case "j":
+                            addUserList(messageFromServer);
+                            break;
+                        case "p":
+                            System.out.println("llego aqui p");
+
+                            deleteUserList(messageFromServer);
+                            break;
+                        case "m":
+                            renderRes(tokens[1] + tokens[2]);
+                            break;
+
+                        default:
+                            System.out.println("default");
+
+                            break;
                     }
+                    // if (messageFromServer.startsWith("dm")) {
+                    //     renderResDM(messageFromServer);
+                    // } else if (messageFromServer.startsWith("openDM")) {
+                    //     openDM(tokens[1]);
+                    // } else if (tokens[0].equals("d")) {
+                    //     receiverDoc(tokens);
+                    // } else if (tokens[0].equals("ddm")) {
+                    //     receiverDocDM(tokens);
+                    //     renderList(messageFromServer);
+                    // } else if (tokens[0].equals("l")) {
+                    //     renderList(messageFromServer);
+                    // } else {
+                    //     renderRes(messageFromServer);
+                    // }
 
                 }
             } catch (IOException ioe) {
@@ -537,21 +642,24 @@ public class MainFrame extends JFrame {
                 output.writeUTF("ddm^" + doc);
 
                 long fileSize = file.length();  // Obtener el tamaño del archivo
+                if (fileSize <= 50000000) {
+                    // Enviar el tamaño del archivo
+                    DataOutputStream netOutDoc = new DataOutputStream(socket.getOutputStream());
+                    netOutDoc.writeLong(fileSize);
 
-                // Enviar el tamaño del archivo
-                DataOutputStream netOutDoc = new DataOutputStream(socket.getOutputStream());
-                netOutDoc.writeLong(fileSize);
+                    // Enviar el archivo
+                    FileInputStream fileInputStream = new FileInputStream(file);
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
 
-                // Enviar el archivo
-                FileInputStream fileInputStream = new FileInputStream(file);
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-
-                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                    netOutDoc.write(buffer, 0, bytesRead);
+                    while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                        netOutDoc.write(buffer, 0, bytesRead);
+                    }
+                    System.out.println("Se envio");
+                    fileInputStream.close();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Ups, este archivo supera el tamaño maximo (50MB)", "Alerta", JOptionPane.WARNING_MESSAGE);
                 }
-                System.out.println("Se envio");
-                fileInputStream.close();
             } else {
                 JOptionPane.showMessageDialog(null, "Archivo no encontrado", "Alerta", JOptionPane.WARNING_MESSAGE);
             }

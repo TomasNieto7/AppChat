@@ -285,18 +285,21 @@ public class HiloChatServer implements Runnable {
     private String options(String res, String[] tokens) throws IOException {
         switch (tokens[0]) {
             case "p":
-                res += name + " ";
+                res = "p^server:^";
+                res += name + "^";
                 removeUser(socket);
                 socket.close();
                 res += "left";
                 break;
             case "j":
                 name = tokens[1];
-                res += name + " ";
+                res = "j^server:^";
+                res += name + "^";
                 res += "joined";
                 break;
             case "m":
-                res = name + ":^";
+                res = "m^";
+                res += name + ":^";
                 res += tokens[1];
                 break;
             case "dm":
