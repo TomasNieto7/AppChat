@@ -187,6 +187,23 @@ public class MainFrame extends JFrame {
         titlePanel.setLayout(new GridLayout(4, 1, 5, 5));
         titlePanel.add(lblFirstName);
 
+        JButton btnDoc = new JButton("Enviar Documento");
+        btnDoc.setFont(mainFont);
+        btnDoc.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    message = textMessage.getText();
+                    String destinatario = dmUser.replace(":", "");
+                    sendDocDM("@" + destinatario + "^" + message);
+                    textMessage.setText("");
+                } catch (IOException ioe) {
+                    System.out.println("Error al enviar mensaje: " + ioe.getMessage());
+                }
+            }
+        });
+
         JButton btnOK = new JButton("Enviar");
         btnOK.setFont(mainFont);
         btnOK.addActionListener(new ActionListener() {
@@ -209,6 +226,7 @@ public class MainFrame extends JFrame {
         buttonsPanel.add(textMessage, BorderLayout.CENTER);
 
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonWrapper.add(btnDoc);
         buttonWrapper.add(btnOK);
         buttonsPanel.add(buttonWrapper, BorderLayout.SOUTH);
 
@@ -250,8 +268,6 @@ public class MainFrame extends JFrame {
 
         String[] tokens = answer.split("\\^");
         String[] tokensEmisorDestinatario = tokens[1].split("-");
-        System.out.println(tokensEmisorDestinatario[0]);
-        System.out.println(tokensEmisorDestinatario[1]);
         JFrame frameDM = getDmFrame(dmsFrame, tokensEmisorDestinatario[0], tokensEmisorDestinatario[1]);
         if (frameDM != null) {
 
@@ -411,8 +427,10 @@ public class MainFrame extends JFrame {
                         renderResDM(messageFromServer);
                     } else if (messageFromServer.startsWith("openDM")) {
                         openDM(tokens[1]);
-                    } else if (messageFromServer.startsWith("d")) {
+                    } else if (tokens[0].equals("d")) {
                         receiverDoc(tokens);
+                    } else if (tokens[0].equals("ddm")) {
+                        receiverDocDM(tokens);
                     } else {
                         renderRes(messageFromServer);
                     }
@@ -505,18 +523,18 @@ public class MainFrame extends JFrame {
             fileOutputStream.write(buffer, 0, bytesRead);
             totalBytesRead += bytesRead;
         }
-
+        System.out.println("se guardo");
         renderRes(tokens[1] + "^" + tokens[2]);
         fileOutputStream.close();
     }
 
     public void sendDocDM(String doc) throws IOException {
-
         try {
-            File file = new File(doc);
+            String[] tokens = doc.split("\\^");
+            File file = new File(tokens[1]);
             // Verificar si el archivo existe
             if (file.exists()) {
-                output.writeUTF("d^" + doc);
+                output.writeUTF("ddm^" + doc);
 
                 long fileSize = file.length();  // Obtener el tamaño del archivo
 
@@ -561,7 +579,7 @@ public class MainFrame extends JFrame {
             totalBytesRead += bytesRead;
         }
 
-        renderRes(tokens[1] + "^" + tokens[2]);
+        renderResDM(tokens[0] + "^" + tokens[1] + "^" + tokens[2]);
         fileOutputStream.close();
     }
 

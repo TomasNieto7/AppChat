@@ -57,6 +57,26 @@ public class HiloChatServer implements Runnable {
         }
     }
 
+    private void sendMsgDocDM(String[] tokens) throws IOException {
+        // Verificamos si el mensaje es un mensaje privado
+        if (tokens[1].startsWith("@")) {
+            String destinatario = tokens[1].substring(1); // quitamos el '@'
+            String mensaje = "ddm^" + name + "-" + destinatario + ":^" + tokens[2];
+            // Buscamos el socket del destinatario
+            for (Socket soc : vector) {
+                HiloChatServer client = getClientByName(destinatario);
+                if (client != null && client.getSocket().equals(soc)) {
+                    // Enviamos el mensaje solo al destinatario
+                    netOut = new DataOutputStream(soc.getOutputStream());
+                    netOut.writeUTF(mensaje);
+                    netOut = new DataOutputStream(socket.getOutputStream());
+                    netOut.writeUTF("dm^" + name + "-" + destinatario + ":^" + tokens[2]);
+                    return;
+                }
+            }
+        }
+    }
+
     private void sendFlagDM(String[] tokens) throws IOException {
         // Verificamos si el mensaje es un mensaje privado
         if (tokens[1].startsWith("@")) {
@@ -210,7 +230,7 @@ public class HiloChatServer implements Runnable {
         // Leer el tamaño del archivo
         long fileSize = dataInputStream.readLong();
 
-        FileOutputStream fileOutputStream = new FileOutputStream(tokens[1]);
+        FileOutputStream fileOutputStream = new FileOutputStream(tokens[2]);
         byte[] buffer = new byte[4096];
         int bytesRead;
         long totalBytesRead = 0;
@@ -228,25 +248,34 @@ public class HiloChatServer implements Runnable {
 
     public void sendDocDM(String[] tokens) throws IOException {
         // Seleccionar archivo para enviar
-        sendMsgDM(tokens);
+        sendMsgDocDM(tokens);
         try {
-            File file = new File(tokens[1]);
-            long fileSize = file.length();  // Obtener el tamaño del archivo
+            // Verificamos si el mensaje es un mensaje privado
+            if (tokens[1].startsWith("@")) {
+                File file = new File(tokens[2]);
+                long fileSize = file.length();  // Obtener el tamaño del archivo
 
-            for (Socket soc : vector) {
-                // Enviar el tamaño del archivo
-                DataOutputStream netOutDoc = new DataOutputStream(soc.getOutputStream());
-                netOutDoc.writeLong(fileSize);
-                // Enviar el archivo
-                FileInputStream fileInputStream = new FileInputStream(file);
-                byte[] buffer = new byte[4096];
-                int bytesRead;
+                // Buscamos el socket del destinatario
+                for (Socket soc : vector) {
+                    String destinatario = tokens[1].substring(1); // quitamos el '@'
+                    HiloChatServer client = getClientByName(destinatario);
+                    if (client != null && client.getSocket().equals(soc)) {
+                        // Enviar el tamaño del archivo
+                        DataOutputStream netOutDoc = new DataOutputStream(soc.getOutputStream());
+                        netOutDoc.writeLong(fileSize);
+                        // Enviar el archivo
+                        FileInputStream fileInputStream = new FileInputStream(file);
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
 
-                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                    netOutDoc.write(buffer, 0, bytesRead);
+                        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                            netOutDoc.write(buffer, 0, bytesRead);
+                        }
+                        System.out.println("Archivo enviado.");
+                        fileInputStream.close();
+                    }
                 }
-                System.out.println("Archivo enviado.");
-                fileInputStream.close();
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -280,6 +309,10 @@ public class HiloChatServer implements Runnable {
                 break;
             case "d":
                 receiverDoc(tokens);
+                res = "-1";
+                break;
+            case "ddm":
+                receiverDocDM(tokens);
                 res = "-1";
                 break;
             default:
