@@ -13,11 +13,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.*;
 
@@ -45,12 +43,27 @@ public class MainFrame extends JFrame {
     }
 
     public void openDM(String name) throws IOException {
-        System.out.println("name: " + name);
         dmFrame(name);
+    }
+
+    public void closeDM(String emisor, String destinatario) throws IOException {
+        JFrame frameDM = getDmFrame(dmsFrame, emisor, destinatario + ":");
+        if (frameDM != null) {
+            dmsFrame.remove(frameDM);
+            frameDM.dispose(); // Cierra el JFrame
+        }
     }
 
     public void sendOpenDM(String destinatario, String emisor) throws IOException {
         output.writeUTF("open^@" + destinatario + "^" + emisor);
+    }
+
+    public void sendCloseDM(String destinatario, String emisor) {
+        try {
+            output.writeUTF("closeDM^@" + destinatario + "^" + emisor);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
     }
 
     public JPanel createListPanel(String server, String nameUser, String msg) {
@@ -81,7 +94,8 @@ public class MainFrame extends JFrame {
                 try {
                     String name = nameUserButton.getText();
                     String destinatario = name.replace(":", "");
-                    if (e.getClickCount() == 2 && !destinatario.equals(userName) && !destinatario.equals("server")) {
+                    JFrame frameDM = getDmFrame(dmsFrame, userName, destinatario + ":");
+                    if (e.getClickCount() == 2 && !destinatario.equals(userName) && !destinatario.equals("server") && frameDM==null) {
                         dmFrame(name);
                         sendOpenDM(destinatario, userName);
                     }
@@ -311,7 +325,27 @@ public class MainFrame extends JFrame {
         nuevoFrame.setTitle(userName + "-" + dmUser);
         nuevoFrame.setSize(500, 500);
         nuevoFrame.setMinimumSize(new Dimension(300, 100));
-        nuevoFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Cierra solo el nuevo frame
+        // Configurar la operación de cierre personalizada
+        nuevoFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Acción personalizada antes de cerrar el frame
+                int respuesta = JOptionPane.showConfirmDialog(null,
+                        "¿Estás seguro de que deseas salir?", "Confirmar salida",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (respuesta == JOptionPane.YES_OPTION) {
+                    // Si el usuario confirma, cerrar la aplicación
+                    String title = nuevoFrame.getTitle();
+                    String[] tokens = title.split("-");
+                    JFrame frameDM = getDmFrame(dmsFrame, tokens[0], tokens[1]);
+                    dmsFrame.remove(frameDM);
+                    sendCloseDM(tokens[1], tokens[0]);
+                    nuevoFrame.dispose(); // Cierra el JFrame
+                }
+                // Si no confirma, no hace nada y el frame permanece abierto
+            }
+        });
         // Muestra el nuevo frame
         nuevoFrame.setVisible(true);
         dmsFrame.add(nuevoFrame);
@@ -497,6 +531,9 @@ public class MainFrame extends JFrame {
                             break;
                         case "openDM":
                             openDM(tokens[1]);
+                            break;
+                        case "closeDM":
+                            closeDM(tokens[2], tokens[1]);
                             break;
                         case "d":
                             receiverDoc(tokens);
@@ -691,7 +728,7 @@ public class MainFrame extends JFrame {
 
     public void running(String[] args) {
         int port = Integer.parseInt(args[1]);
-        String user = args[2];
+        String user = args[2].toLowerCase();
         String host = args[0];
         connectedClient(host, port, user);
         // Agregar un shutdown hook

@@ -95,6 +95,24 @@ public class HiloChatServer implements Runnable {
         }
     }
 
+    private void sendFlagCloseDM(String[] tokens) throws IOException {
+        // Verificamos si el mensaje es un mensaje privado
+        if (tokens[1].startsWith("@")) {
+            String destinatario = tokens[1].substring(1); // quitamos el '@'
+            String mensaje = "closeDM^" + destinatario + "^" + tokens[2];
+            // Buscamos el socket del destinatario
+            for (Socket soc : vector) {
+                HiloChatServer client = getClientByName(destinatario);
+                if (client != null && client.getSocket().equals(soc)) {
+                    // Enviamos el mensaje solo al destinatario
+                    netOut = new DataOutputStream(soc.getOutputStream());
+                    netOut.writeUTF(mensaje);
+                    return;
+                }
+            }
+        }
+    }
+
     public void updateSocket(Socket newSocket) throws IOException {
         this.socket = newSocket;
         initStreams(); // Reinicializar los streams
@@ -308,6 +326,10 @@ public class HiloChatServer implements Runnable {
                 break;
             case "open":
                 sendFlagDM(tokens);
+                res = "-1";
+                break;
+            case "closedm":
+                sendFlagCloseDM(tokens);
                 res = "-1";
                 break;
             case "d":
