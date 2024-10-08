@@ -513,13 +513,11 @@ public class MainFrame extends JFrame {
                             break;
                         case "p":
                             System.out.println("llego aqui p");
-
                             deleteUserList(messageFromServer);
                             break;
                         case "m":
-                            renderRes(tokens[1] + tokens[2]);
+                            renderRes(tokens[1] + "^" + tokens[2]);
                             break;
-
                         default:
                             System.out.println("default");
 
