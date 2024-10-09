@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class HiloChatServer implements Runnable {
 
@@ -166,25 +164,6 @@ public class HiloChatServer implements Runnable {
                 netOut.writeUTF("l^server:^" + nameA + "^ is connected");
             }
         }
-    }
-
-    public void startSendingActivity() {
-        Timer timer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    if (!socket.isClosed()) {
-                        sendUserActive();
-                    }
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
-            }
-        };
-
-        // Ejecutar la tarea cada 30 segundos (30 * 1000 ms)
-        timer.scheduleAtFixedRate(task, 100, 30 * 1000);
     }
 
     public boolean isAlive(Thread hilo) {
@@ -349,7 +328,7 @@ public class HiloChatServer implements Runnable {
     public void run() {
         try {
             initStreams();
-            startSendingActivity();
+            sendUserActive();
             while (true) {
                 String msg = netIn.readUTF();
                 String[] tokens = msg.split("\\^");

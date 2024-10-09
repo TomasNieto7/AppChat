@@ -11,9 +11,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -28,7 +26,7 @@ public class ChatPrivado {
 
     final private Font mainFont = new Font("Arial", Font.BOLD, 18);
     private String message;
-    ClientServer clientServer;
+    private ClientServer clientServer;
     private String userName;
     private List<JFrame> dmsFrame;
     private List<JPanel> dmsPanel;
@@ -80,8 +78,13 @@ public class ChatPrivado {
             public void actionPerformed(ActionEvent e) {
                 try {
                     message = textMessage.getText();
-                    String destinatario = dmUser.replace(":", "");
-                    clientServer.sendMessageDM("@" + destinatario + "^", message);
+                    if (message.length() != 0) {
+                        textMessage.setText("");
+                        String destinatario = dmUser.replace(":", "");
+                        clientServer.sendMessageDM("@" + destinatario + "^", message);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Ups, el mensaje esta vacio", "Alerta", JOptionPane.WARNING_MESSAGE);
+                    }
                     textMessage.setText("");
                 } catch (IOException ioe) {
                     System.out.println("Error al enviar mensaje: " + ioe.getMessage());
@@ -159,7 +162,7 @@ public class ChatPrivado {
             String msg = "";
             if (tokens[0].equals("ddm") || tokens[2].contains(".")) {
                 msg = tokens[2];
-            }else{
+            } else {
                 msg = CifradoAES.desencriptar(tokens[2], CifradoAES.toSecretKey(tokens[3]));
             }
             String[] tokensEmisorDestinatario = tokens[1].split("-");

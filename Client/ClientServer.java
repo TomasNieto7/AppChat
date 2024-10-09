@@ -30,7 +30,7 @@ public class ClientServer {
         this.userName = username;
         input = new DataInputStream(socket.getInputStream());
         output = new DataOutputStream(socket.getOutputStream());
-        chatGlobal = new ChatGlobal(this, username, dmsFrame, dmsPanel);
+        chatGlobal = new ChatGlobal(this, username, dmsFrame);
         chatPrivado = new ChatPrivado(this, username, dmsFrame, dmsPanel);
     }
 
@@ -48,6 +48,14 @@ public class ClientServer {
         // Agregar un shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
+                for (int i = 0; i < dmsFrame.size(); i++) {
+                    JFrame frame = dmsFrame.get(i);
+                    String titleFrame = frame.getTitle();
+                    String[] tokens = titleFrame.split("-");
+                    sendCloseDM(tokens[1], tokens[0]);
+                    dmsFrame.remove(i);
+
+                }
                 sendDisconnection();
                 System.out.println("¡Programa cerrado con Ctrl + C!");
             } catch (IOException ioe) {
@@ -134,7 +142,6 @@ public class ClientServer {
         try {
             SecretKey secretKey = CifradoAES.keyGenerator();
             String textoEncriptado = CifradoAES.encriptar(msg, secretKey);
-            System.out.println(secretKey);
             output.writeUTF("dm^" + destinatario + textoEncriptado + "^" + CifradoAES.toString(secretKey));
         } catch (Exception e) {
             e.printStackTrace();

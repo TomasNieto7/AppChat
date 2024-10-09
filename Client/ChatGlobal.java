@@ -8,12 +8,12 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.awt.event.MouseEvent;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -30,19 +30,17 @@ public class ChatGlobal extends JFrame {
     private List<JPanel> listPanels = new ArrayList<>();
     private JPanel titlePanel = new JPanel();
     final private Font mainFont = new Font("Arial", Font.BOLD, 18);
-    JTextField textMessage;
+    private JTextField textMessage;
     private String message;
-    JPanel resPanel = new JPanel();
-    ClientServer clientServer;
+    private JPanel resPanel = new JPanel();
+    private ClientServer clientServer;
     private String userName;
     private List<JFrame> dmsFrame;
-    private List<JPanel> dmsPanel;
 
-    public ChatGlobal(ClientServer clientServer, String userName, List<JFrame> dmsFrame, List<JPanel> dmsPanel) {
+    public ChatGlobal(ClientServer clientServer, String userName, List<JFrame> dmsFrame) {
         this.clientServer = clientServer;
         this.userName = userName;
         this.dmsFrame = dmsFrame;
-        this.dmsPanel = dmsPanel;
     }
 
     public void initialize(String user) {
@@ -83,7 +81,9 @@ public class ChatGlobal extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     message = textMessage.getText();
-                    clientServer.sendMessage(message);
+                    if (message.length() != 0) {
+                        clientServer.sendMessage(message);
+                    } else JOptionPane.showMessageDialog(null, "Ups, el mensaje esta vacio", "Alerta", JOptionPane.WARNING_MESSAGE);
                     textMessage.setText("");
                 } catch (IOException ioe) {
                     System.out.println("Error al enviar mensaje: " + ioe.getMessage());
@@ -268,7 +268,6 @@ public class ChatGlobal extends JFrame {
     }
 
     public void deleteUserPanelList(String userDelete) {
-        int indexDelete = 0;
         JPanel deletePanel = null;
         for (JPanel listPanel : listPanels) {
             // Obtén el segundo componente, que es nameUserButton
@@ -280,7 +279,6 @@ public class ChatGlobal extends JFrame {
                 String userConnected = nameUserButton.getText();
                 if (userConnected.equals(userDelete)) {
                     System.out.println("llego aqui");
-                    indexDelete = listPanels.indexOf(listPanel);
                     deletePanel = listPanel;
                 }
             }
