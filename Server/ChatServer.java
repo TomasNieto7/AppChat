@@ -1,174 +1,92 @@
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class ChatServer {
 
-    private List<Socket> vector = new ArrayList<>();
-    private List<Thread> hilos = new ArrayList<>();
-    private List<HiloChatServer> hilosChats = new ArrayList<>();
-    private DataOutputStream netOut;
+    private List<Socket> vector = new ArrayList<>(); // Lista para almacenar los sockets de las conexiones de los clientes
+    private List<Thread> hilos = new ArrayList<>(); // Lista para almacenar los hilos que se crearán para manejar las conexiones de los clientes
+    private List<HiloChatServer> hilosChats = new ArrayList<>(); // Lista para almacenar las instancias de HiloChatServer, que gestionan la comunicación con cada cliente
+    private int port; // Puerto en el que el servidor escucha las conexiones
 
+    // Constructor que inicializa el puerto en el que se abrirá el servidor
     public ChatServer(int port) {
         this.port = port;
     }
 
+    // Método para obtener la lista de hilos que manejan los clientes
     public List<Thread> getHilos() {
         return hilos;
     }
 
+    // Método para obtener la lista de objetos HiloChatServer que gestionan la comunicación
     public List<HiloChatServer> getHilosChats() {
         return hilosChats;
     }
 
+    // Método para obtener la lista de sockets conectados
     public List<Socket> getVector() {
         return vector;
     }
 
+    // Método para asignar una nueva lista de sockets conectados
     public void setVector(List<Socket> vector) {
         this.vector = vector;
     }
 
+    // Método para asignar una nueva lista de hilos
     public void setHilos(List<Thread> hilos) {
         this.hilos = hilos;
     }
 
+    // Método para asignar una nueva lista de hilos de chat (HiloChatServer)
     public void setHilosChats(List<HiloChatServer> hilosChats) {
         this.hilosChats = hilosChats;
     }
 
-    private int port;
-
+    // Método que intenta crear un ServerSocket en el puerto especificado
     private ServerSocket connect() {
         try {
-            ServerSocket sSocket = new ServerSocket(port);
-            return sSocket;
+            ServerSocket sSocket = new ServerSocket(port); // Crear un ServerSocket en el puerto
+            return sSocket; // Retornar el ServerSocket creado
         } catch (IOException ioe) {
-            System.out.println("No se pudo realizar la conexión");
+            System.out.println("No se pudo realizar la conexión"); // Imprimir error si no se puede crear el ServerSocket
         }
-        return null;
+        return null; // Retornar null en caso de error
     }
 
+    // Método principal que espera conexiones de clientes y crea un hilo por cada cliente
     public void principal() {
-        ServerSocket sSocket = connect();
-        if (sSocket != null) {
+        ServerSocket sSocket = connect(); // Conectar el servidor al puerto especificado
+        if (sSocket != null) { // Si el servidor se conectó correctamente
             try {
-                // startSocketMonitor();
-                // startSendingActivity();
                 while (true) {
-                    System.out.println("ChatServer abierto y esperando conexiones en puerto " + port);
-                    Socket socket = sSocket.accept();
-                    vector.add(socket);
-                    System.out.println(vector.size());
+                    System.out.println("ChatServer abierto y esperando conexiones en puerto " + port); // Imprimir que el servidor está esperando conexiones
+                    Socket socket = sSocket.accept(); // Aceptar una conexión de cliente
+                    vector.add(socket); // Añadir el socket del cliente a la lista
+                    // Crear una instancia de HiloChatServer para manejar la comunicación con el cliente
                     HiloChatServer hiloChatServer = new HiloChatServer(socket, vector, this);
+                    // Crear un hilo para ejecutar el HiloChatServer y gestionarlo
                     Thread hilo = new Thread(hiloChatServer);
-                    hilos.add(hilo);
-                    hilosChats.add(hiloChatServer);
-                    hilo.start();
+                    hilos.add(hilo); // Añadir el hilo a la lista de hilos
+                    hilosChats.add(hiloChatServer); // Añadir el objeto HiloChatServer a la lista de hilos de chat
+                    hilo.start(); // Iniciar el hilo
                 }
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                ioe.printStackTrace(); // Imprimir el stack trace en caso de error
             }
         } else {
-            System.err.println("No se pudo abrir el puerto");
+            System.err.println("No se pudo abrir el puerto"); // Imprimir error si no se pudo abrir el puerto
         }
     }
 
-    private void sendUserActive() throws IOException {
-        String name;
-        for (int i = 0; i < hilosChats.size(); i++) {
-            HiloChatServer chat = hilosChats.get(i);
-            boolean flag = isAlive(hilos.get(i));
-            name = chat.getName();
-            if (name != null && flag) {
-                for (Socket soc : vector) {
-                    netOut = new DataOutputStream(soc.getOutputStream());
-                    netOut.writeUTF("server:^" + chat.getName() + " is connected");
-                }
-            }
-        }
-    }
-
-    public void startSendingActivity() {
-        Timer timer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    sendUserActive();
-                } catch (IOException ioe) {
-                    System.out.println("nadie esta conectado");
-                    System.out.println(ioe);
-                }
-            }
-        };
-
-        // Ejecutar la tarea cada 30 segundos (30 * 1000 ms)
-        timer.scheduleAtFixedRate(task, 0, 30 * 1000);
-    }
-
-    public void startSocketMonitor() {
-        Timer timer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    socketMonitor();
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
-            }
-        };
-
-        // Ejecutar la tarea cada 30 segundos (30 * 1000 ms)
-        timer.scheduleAtFixedRate(task, 0, 100);
-    }
-
-    public void socketMonitor() throws IOException {
-        List<Integer> indicesParaEliminar = new ArrayList<>();
-        for (int i = 0; i < vector.size(); i++) {
-            Socket socket = vector.get(i);
-            if (socket.isClosed()) {
-                indicesParaEliminar.add(port);
-            }
-        }
-        removeUser(indicesParaEliminar);
-    }
-
-    public boolean isAlive(Thread hilo) {
-        return hilo.isAlive();
-    }
-
-    public synchronized void removeUser(List<Integer> indicesParaEliminar) {
-        // Eliminar los elementos marcados
-        for (int i = indicesParaEliminar.size() - 1; i >= 0; i--) {
-            int indice = indicesParaEliminar.get(i);
-            if (indice >= 0 && indice < hilos.size() && indice < hilosChats.size() && indice < vector.size()) {
-                hilos.remove(indice);
-                hilosChats.remove(indice);
-                vector.remove(indice);
-            }
-        }
-    }
-
-    public void removeUser2(Socket deleteSocket) {
-        int indice = vector.indexOf(deleteSocket);
-        if (indice >= 0 && indice < hilos.size() && indice < hilosChats.size() && indice < vector.size()) {
-            hilos.remove(indice);
-            hilosChats.remove(indice);
-            vector.remove(indice);
-        }
-    }
-
+    // Método main que inicia el servidor con el puerto pasado como argumento
     public static void main(String[] args) {
-        ChatServer chat = new ChatServer(Integer.parseInt(args[0]));
-        chat.principal();
+        ChatServer chat = new ChatServer(Integer.parseInt(args[0])); // Crear una instancia de ChatServer con el puerto recibido por parámetro
+        chat.principal(); // Ejecutar el método principal para empezar a escuchar conexiones
     }
 
 }

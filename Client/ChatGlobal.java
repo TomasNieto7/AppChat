@@ -115,6 +115,7 @@ public class ChatGlobal extends JFrame {
         setSize(500, 500); // Tamaño de la ventana
         setMinimumSize(new Dimension(300, 100)); // Tamaño mínimo de la ventana
         // Configurar la operación de cierre personalizada
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -122,7 +123,6 @@ public class ChatGlobal extends JFrame {
                 int respuesta = JOptionPane.showConfirmDialog(null,
                         "¿Estás seguro de que deseas salir?", "Confirmar salida",
                         JOptionPane.YES_NO_OPTION);
-
                 if (respuesta == JOptionPane.YES_OPTION) {
                     // Si el usuario confirma, cerrar la aplicación
                     dispose(); // Cierra el JFrame
