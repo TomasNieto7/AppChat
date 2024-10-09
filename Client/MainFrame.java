@@ -15,8 +15,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 
 public class MainFrame extends JFrame {
@@ -95,7 +99,7 @@ public class MainFrame extends JFrame {
                     String name = nameUserButton.getText();
                     String destinatario = name.replace(":", "");
                     JFrame frameDM = getDmFrame(dmsFrame, userName, destinatario + ":");
-                    if (e.getClickCount() == 2 && !destinatario.equals(userName) && !destinatario.equals("server") && frameDM==null) {
+                    if (e.getClickCount() == 2 && !destinatario.equals(userName) && !destinatario.equals("server") && frameDM == null) {
                         dmFrame(name);
                         sendOpenDM(destinatario, userName);
                     }
@@ -292,7 +296,7 @@ public class MainFrame extends JFrame {
                 try {
                     message = textMessage.getText();
                     String destinatario = dmUser.replace(":", "");
-                    sendMessageDM("@" + destinatario + "^" + message);
+                    sendMessageDM("@" + destinatario + "^", message);
                     textMessage.setText("");
                 } catch (IOException ioe) {
                     System.out.println("Error al enviar mensaje: " + ioe.getMessage());
@@ -365,57 +369,63 @@ public class MainFrame extends JFrame {
 
     public void renderResDM(String answer) {
 
-        String[] tokens = answer.split("\\^");
-        String[] tokensEmisorDestinatario = tokens[1].split("-");
-        JFrame frameDM = getDmFrame(dmsFrame, tokensEmisorDestinatario[0], tokensEmisorDestinatario[1]);
-        if (frameDM != null) {
+        try {
+            String[] tokens = answer.split("\\^");
+            System.out.println(tokens[3]);
+            String msg = CifradoAES.desencriptar(tokens[2], CifradoAES.toSecretKey(tokens[3]));
+            String[] tokensEmisorDestinatario = tokens[1].split("-");
+            JFrame frameDM = getDmFrame(dmsFrame, tokensEmisorDestinatario[0], tokensEmisorDestinatario[1]);
+            if (frameDM != null) {
 
-            Component contentPane = frameDM.getContentPane().getComponent(0);
+                Component contentPane = frameDM.getContentPane().getComponent(0);
 
-            if (contentPane instanceof Container) {
-                Container container = (Container) contentPane;
-                Component[] components = container.getComponents();
+                if (contentPane instanceof Container) {
+                    Container container = (Container) contentPane;
+                    Component[] components = container.getComponents();
 
-                JScrollPane scrollPane = (JScrollPane) components[1]; // Obtienes el scrollPane
-                JPanel resPanelDM = (JPanel) scrollPane.getViewport().getView(); // Obtienes el resPanelDM desde el scrollPane
-                // Crear un panel horizontal
-                JPanel resPanelU = new JPanel();
-                resPanelU.setLayout(new BoxLayout(resPanelU, BoxLayout.X_AXIS));
-                // Alineación a la izquierda del contenido
-                resPanelU.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    JScrollPane scrollPane = (JScrollPane) components[1]; // Obtienes el scrollPane
+                    JPanel resPanelDM = (JPanel) scrollPane.getViewport().getView(); // Obtienes el resPanelDM desde el scrollPane
+                    // Crear un panel horizontal
+                    JPanel resPanelU = new JPanel();
+                    resPanelU.setLayout(new BoxLayout(resPanelU, BoxLayout.X_AXIS));
+                    // Alineación a la izquierda del contenido
+                    resPanelU.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-                // Crear el botón a la izquierda
-                JButton nameUserButton = new JButton(tokensEmisorDestinatario[0] + ":");
-                nameUserButton.setFont(mainFont);
-                // Elimina el diseño por defecto
-                nameUserButton.setBorderPainted(false);   // Quitar el borde
-                nameUserButton.setContentAreaFilled(false); // Quitar el fondo
-                nameUserButton.setFocusPainted(false);    // Quitar el efecto de foco
-                nameUserButton.setOpaque(false);          // Hacer el botón transparente
-                nameUserButton.setPreferredSize(new Dimension(100, 20));
+                    // Crear el botón a la izquierda
+                    JButton nameUserButton = new JButton(tokensEmisorDestinatario[0] + ":");
+                    nameUserButton.setFont(mainFont);
+                    // Elimina el diseño por defecto
+                    nameUserButton.setBorderPainted(false);   // Quitar el borde
+                    nameUserButton.setContentAreaFilled(false); // Quitar el fondo
+                    nameUserButton.setFocusPainted(false);    // Quitar el efecto de foco
+                    nameUserButton.setOpaque(false);          // Hacer el botón transparente
+                    nameUserButton.setPreferredSize(new Dimension(100, 20));
 
-                // Crear el label a la derecha
-                JLabel resUserLb = new JLabel(tokens[2]);
-                resUserLb.setFont(mainFont);
-                resUserLb.setPreferredSize(new Dimension(300, 20));
+                    // Crear el label a la derecha
+                    JLabel resUserLb = new JLabel(msg);
+                    resUserLb.setFont(mainFont);
+                    resUserLb.setPreferredSize(new Dimension(300, 20));
 
-                // Establecer tamaño preferido y fondo del panel
-                resPanelU.setPreferredSize(new Dimension(400, 20));
-                // resPanelU.setBackground(new Color(135, 206, 250));
+                    // Establecer tamaño preferido y fondo del panel
+                    resPanelU.setPreferredSize(new Dimension(400, 20));
+                    // resPanelU.setBackground(new Color(135, 206, 250));
 
-                // Añadir los componentes al panel (botón a la izquierda, label a la derecha)
-                resPanelU.add(nameUserButton);
-                resPanelU.add(resUserLb);
+                    // Añadir los componentes al panel (botón a la izquierda, label a la derecha)
+                    resPanelU.add(nameUserButton);
+                    resPanelU.add(resUserLb);
 
-                // Añadir el panel al contenedor principal
-                resPanelDM.add(resPanelU);
+                    // Añadir el panel al contenedor principal
+                    resPanelDM.add(resPanelU);
 
-                // Actualizar la interfaz gráfica
-                SwingUtilities.updateComponentTreeUI(resPanelDM);
-            } else {
-                System.out.println("El componente no es un contenedor.");
+                    // Actualizar la interfaz gráfica
+                    SwingUtilities.updateComponentTreeUI(resPanelDM);
+                } else {
+                    System.out.println("El componente no es un contenedor.");
+                }
+
             }
-
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
@@ -603,8 +613,15 @@ public class MainFrame extends JFrame {
         output.writeUTF("p^");
     }
 
-    public void sendMessageDM(String msg) throws IOException {
-        output.writeUTF("dm^" + msg);
+    public void sendMessageDM(String destinatario, String msg) throws IOException {
+        try {
+            SecretKey secretKey = CifradoAES.keyGenerator();
+            String textoEncriptado = CifradoAES.encriptar(msg, secretKey);
+            System.out.println(secretKey);
+            output.writeUTF("dm^" + destinatario + textoEncriptado + "^" + CifradoAES.toString(secretKey));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendDoc(String doc) throws IOException {

@@ -41,7 +41,7 @@ public class HiloChatServer implements Runnable {
         // Verificamos si el mensaje es un mensaje privado
         if (tokens[1].startsWith("@")) {
             String destinatario = tokens[1].substring(1); // quitamos el '@'
-            String mensaje = "dm^" + name + "-" + destinatario + ":^" + tokens[2];
+            String mensaje = "dm^" + name + "-" + destinatario + ":^" + tokens[2] + "^" + tokens[3];
             // Buscamos el socket del destinatario
             for (Socket soc : vector) {
                 HiloChatServer client = getClientByName(destinatario);
@@ -328,7 +328,7 @@ public class HiloChatServer implements Runnable {
                 sendFlagDM(tokens);
                 res = "-1";
                 break;
-            case "closedm":
+            case "closeDM":
                 sendFlagCloseDM(tokens);
                 res = "-1";
                 break;
@@ -352,7 +352,6 @@ public class HiloChatServer implements Runnable {
             startSendingActivity();
             while (true) {
                 String msg = netIn.readUTF();
-                msg = msg.toLowerCase();
                 String[] tokens = msg.split("\\^");
                 String res = "server:^";
                 System.out.println(msg);
