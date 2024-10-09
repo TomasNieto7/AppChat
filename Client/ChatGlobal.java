@@ -115,7 +115,7 @@ public class ChatGlobal extends JFrame {
         setSize(500, 500); // Tamaño de la ventana
         setMinimumSize(new Dimension(300, 100)); // Tamaño mínimo de la ventana
         // Configurar la operación de cierre personalizada
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // Establece que al intentar cerrar la ventana, no se realizará ninguna acción por defecto.
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {

@@ -123,6 +123,7 @@ public class ChatPrivado {
         nuevoFrame.setTitle(userName + "-" + dmUser); // Establece el título del JFrame
         nuevoFrame.setSize(500, 500); // Establece el tamaño del JFrame
         nuevoFrame.setMinimumSize(new Dimension(300, 100)); // Establece el tamaño mínimo del JFrame
+        nuevoFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // Establece que al intentar cerrar la ventana, no se realizará ninguna acción por defecto.
         // Configurar la operación de cierre personalizada
         nuevoFrame.addWindowListener(new WindowAdapter() { // Escucha el evento de cerrar la ventana
             @Override
