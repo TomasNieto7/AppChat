@@ -26,95 +26,94 @@ import javax.swing.SwingUtilities;
 
 public class ChatGlobal extends JFrame {
 
-    private List<String> userList = new ArrayList<>();
-    private List<JPanel> listPanels = new ArrayList<>();
-    private JPanel titlePanel = new JPanel();
-    final private Font mainFont = new Font("Arial", Font.BOLD, 18);
-    private JTextField textMessage;
-    private String message;
-    private JPanel resPanel = new JPanel();
-    private ClientServer clientServer;
-    private String userName;
-    private List<JFrame> dmsFrame;
+    private List<String> userList = new ArrayList<>(); // Lista de usuarios conectados
+    private List<JPanel> listPanels = new ArrayList<>(); // Lista de paneles de usuarios
+    private JPanel titlePanel = new JPanel(); // Panel para el título
+    final private Font mainFont = new Font("Arial", Font.BOLD, 18); // Fuente principal para la interfaz
+    private JTextField textMessage; // Campo de texto para el mensaje
+    private String message; // Mensaje que se va a enviar
+    private JPanel resPanel = new JPanel(); // Panel para mostrar las respuestas
+    private ClientServer clientServer; // Instancia del cliente/servidor para la comunicación
+    private String userName; // Nombre del usuario
+    private List<JFrame> dmsFrame; // Lista de ventanas de mensajes directos
 
+    // Constructor de la clase
     public ChatGlobal(ClientServer clientServer, String userName, List<JFrame> dmsFrame) {
-        this.clientServer = clientServer;
-        this.userName = userName;
-        this.dmsFrame = dmsFrame;
+        this.clientServer = clientServer; // Inicializa la instancia de ClientServer
+        this.userName = userName; // Inicializa el nombre del usuario
+        this.dmsFrame = dmsFrame; // Inicializa la lista de ventanas de DM
     }
 
+    // Método para inicializar la interfaz del chat
     public void initialize(String user) {
+        // Crear etiqueta del título
         JLabel lblFirstName = new JLabel("Chat Grupal");
         lblFirstName.setFont(mainFont);
-
-        JTextField textMessage = new JTextField();
+        // Campo de texto para mensajes
+        textMessage = new JTextField();
         textMessage.setFont(mainFont);
         textMessage.setPreferredSize(new Dimension(400, 40));
-
+        // Configurar panel del título
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.PAGE_AXIS));
         titlePanel.setPreferredSize(new Dimension(400, 200));
-        // resPanel.setBackground(Color.black);
-        JScrollPane scrollPaneList = new JScrollPane(titlePanel);
-        titlePanel.add(lblFirstName);
-
+        JScrollPane scrollPaneList = new JScrollPane(titlePanel); // Panel con scroll
+        titlePanel.add(lblFirstName); // Agregar la etiqueta al panel del título
+        // Botón para enviar documentos
         JButton btnDoc = new JButton("Enviar Documento");
         btnDoc.setFont(mainFont);
         btnDoc.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    message = textMessage.getText();
-                    clientServer.sendDoc(message);
-                    textMessage.setText("");
+                    message = textMessage.getText(); // Obtener el mensaje del campo de texto
+                    clientServer.sendDoc(message); // Enviar el documento
+                    textMessage.setText(""); // Limpiar el campo de texto
                 } catch (IOException ioe) {
                     System.out.println("Error al enviar mensaje: " + ioe.getMessage());
                 }
             }
         });
-
+        // Botón para enviar mensajes
         JButton btnOK = new JButton("Enviar");
         btnOK.setFont(mainFont);
         btnOK.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    message = textMessage.getText();
-                    if (message.length() != 0) {
-                        clientServer.sendMessage(message);
-                    } else JOptionPane.showMessageDialog(null, "Ups, el mensaje esta vacio", "Alerta", JOptionPane.WARNING_MESSAGE);
-                    textMessage.setText("");
+                    message = textMessage.getText(); // Obtener el mensaje del campo de texto
+                    if (message.length() != 0) { // Verificar que el mensaje no esté vacío
+                        clientServer.sendMessage(message); // Enviar el mensaje
+                    } else {
+                        // Mostrar alerta si el mensaje está vacío
+                        JOptionPane.showMessageDialog(null, "Ups, el mensaje está vacío", "Alerta", JOptionPane.WARNING_MESSAGE);
+                    }
+                    textMessage.setText(""); // Limpiar el campo de texto
                 } catch (IOException ioe) {
                     System.out.println("Error al enviar mensaje: " + ioe.getMessage());
                 }
             }
         });
-
+        // Panel para los botones
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new BorderLayout());
-        buttonsPanel.add(textMessage, BorderLayout.CENTER);
-
+        buttonsPanel.add(textMessage, BorderLayout.CENTER); // Agregar campo de texto al panel de botones
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonWrapper.add(btnDoc);
-        buttonWrapper.add(btnOK);
-        buttonsPanel.add(buttonWrapper, BorderLayout.SOUTH);
-
-        resPanel.setLayout(new BoxLayout(resPanel, BoxLayout.PAGE_AXIS));
-        // resPanel.setBackground(Color.black);
-        JScrollPane scrollPane = new JScrollPane(resPanel);
-
+        buttonWrapper.add(btnDoc); // Agregar botón de documento
+        buttonWrapper.add(btnOK); // Agregar botón de envío
+        buttonsPanel.add(buttonWrapper, BorderLayout.SOUTH); // Agregar botones al panel de botones
+        resPanel.setLayout(new BoxLayout(resPanel, BoxLayout.PAGE_AXIS)); // Configurar panel de respuestas
+        JScrollPane scrollPane = new JScrollPane(resPanel); // Panel de respuestas con scroll
+        // Crear panel principal
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
-        mainPanel.add(scrollPaneList, BorderLayout.NORTH);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
-        mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
-
-        add(mainPanel);
-
-        setTitle("Welcome " + user);
-        setSize(500, 500);
-        setMinimumSize(new Dimension(300, 100));
+        mainPanel.add(scrollPaneList, BorderLayout.NORTH); // Agregar panel de título
+        mainPanel.add(scrollPane, BorderLayout.CENTER); // Agregar panel de respuestas
+        mainPanel.add(buttonsPanel, BorderLayout.SOUTH); // Agregar panel de botones
+        add(mainPanel); // Agregar panel principal a la ventana
+        // Configurar la ventana
+        setTitle("Welcome " + user); // Título de la ventana
+        setSize(500, 500); // Tamaño de la ventana
+        setMinimumSize(new Dimension(300, 100)); // Tamaño mínimo de la ventana
         // Configurar la operación de cierre personalizada
         addWindowListener(new WindowAdapter() {
             @Override
@@ -132,189 +131,163 @@ public class ChatGlobal extends JFrame {
                 // Si no confirma, no hace nada y el frame permanece abierto
             }
         });
-        setVisible(true);
+        setVisible(true); // Hacer visible la ventana
     }
 
+    // Método para crear un panel que muestra la lista de usuarios
     public JPanel createListPanel(String server, String nameUser, String msg) {
-        // Crear un panel horizontal
-        JPanel resPanelU = new JPanel();
-        resPanelU.setLayout(new BoxLayout(resPanelU, BoxLayout.X_AXIS));
-        // Alineación a la izquierda del contenido
-        resPanelU.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        // Crear el label a la derecha
+        JPanel resPanelU = new JPanel(); // Crear un panel horizontal
+        resPanelU.setLayout(new BoxLayout(resPanelU, BoxLayout.X_AXIS)); // Configurar el layout
+        resPanelU.setAlignmentX(Component.LEFT_ALIGNMENT); // Alineación a la izquierda
+        // Crear el label para el servidor
         JLabel serverLB = new JLabel(server);
         serverLB.setFont(mainFont);
         serverLB.setPreferredSize(new Dimension(100, 20));
-
-        // Crear el botón a la izquierda
+        // Crear el botón para el nombre de usuario
         JButton nameUserButton = new JButton(nameUser);
         nameUserButton.setFont(mainFont);
-        // Elimina el diseño por defecto
-        nameUserButton.setBorderPainted(false);   // Quitar el borde
+        nameUserButton.setBorderPainted(false); // Quitar el borde
         nameUserButton.setContentAreaFilled(false); // Quitar el fondo
-        nameUserButton.setFocusPainted(false);    // Quitar el efecto de foco
-        nameUserButton.setOpaque(false);          // Hacer el botón transparente
-
-        // Agregar MouseListener para capturar eventos del ratón
+        nameUserButton.setFocusPainted(false); // Quitar el efecto de foco
+        nameUserButton.setOpaque(false); // Hacer el botón transparente
+        // Agregar MouseListener para el botón de nombre de usuario
         nameUserButton.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                // Detecta si es doble clic
+                // Detectar si es un doble clic
                 try {
-                    String name = nameUserButton.getText();
-                    String destinatario = name.replace(":", "");
-                    JFrame frameDM = clientServer.getDmFrameChat(dmsFrame, userName, destinatario + ":");
+                    String name = nameUserButton.getText(); // Obtener el texto del botón
+                    String destinatario = name.replace(":", ""); // Quitar ":" del nombre
+                    JFrame frameDM = clientServer.getDmFrameChat(dmsFrame, userName, destinatario + ":"); // Obtener ventana de DM
                     if (e.getClickCount() == 2 && !destinatario.equals(userName) && !destinatario.equals("server") && frameDM == null) {
-                        clientServer.openDMFrame(name);
-                        clientServer.sendOpenDM(destinatario, userName);
+                        clientServer.openDMFrame(name); // Abrir ventana de DM
+                        clientServer.sendOpenDM(destinatario, userName); // Enviar mensaje para abrir DM
                     }
                 } catch (IOException ioe) {
-                    ioe.getStackTrace();
+                    ioe.getStackTrace(); // Manejo de excepciones
                 }
             }
         });
-
-        // Crear el label a la derecha
+        // Crear el label para el mensaje
         JLabel msgLB = new JLabel(msg);
         msgLB.setFont(mainFont);
-
         // Establecer tamaño preferido y fondo del panel
         resPanelU.setPreferredSize(new Dimension(1000, 20));
-        resPanelU.setBackground(Color.GRAY);
-        // resPanelU.setBackground(new Color(135, 206, 250));
-
+        resPanelU.setBackground(Color.GRAY); // Establecer color de fondo
         // Añadir los componentes al panel (botón a la izquierda, label a la derecha)
         resPanelU.add(serverLB);
         resPanelU.add(nameUserButton);
         resPanelU.add(msgLB);
-        return resPanelU;
+        return resPanelU; // Retornar el panel creado
     }
 
+    // Método para crear un panel para respuestas de usuarios
     public JPanel createResPanel(String nameUser, String msg) {
-        // Crear un panel horizontal
-        JPanel resPanelU = new JPanel();
-        resPanelU.setLayout(new BoxLayout(resPanelU, BoxLayout.X_AXIS));
-        // Alineación a la izquierda del contenido
-        resPanelU.setAlignmentX(Component.LEFT_ALIGNMENT);
-        // Crear el botón a la izquierda
+        JPanel resPanelU = new JPanel(); // Crear un panel horizontal
+        resPanelU.setLayout(new BoxLayout(resPanelU, BoxLayout.X_AXIS)); // Configurar el layout
+        resPanelU.setAlignmentX(Component.LEFT_ALIGNMENT); // Alineación a la izquierda
+        // Crear el botón para el nombre de usuario
         JButton nameUserButton = new JButton(nameUser);
         nameUserButton.setFont(mainFont);
-        // Elimina el diseño por defecto
-        nameUserButton.setBorderPainted(false);   // Quitar el borde
+        nameUserButton.setBorderPainted(false); // Quitar el borde
         nameUserButton.setContentAreaFilled(false); // Quitar el fondo
-        nameUserButton.setFocusPainted(false);    // Quitar el efecto de foco
-        nameUserButton.setOpaque(false);          // Hacer el botón transparente
-        nameUserButton.setPreferredSize(new Dimension(100, 20));
+        nameUserButton.setFocusPainted(false); // Quitar el efecto de foco
+        nameUserButton.setOpaque(false); // Hacer el botón transparente
+        nameUserButton.setPreferredSize(new Dimension(100, 20)); // Establecer tamaño preferido
 
-        // Agregar MouseListener para capturar eventos del ratón
+        // Agregar MouseListener para el botón de nombre de usuario
         nameUserButton.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                // Detecta si es doble clic
+                // Detectar si es un doble clic
                 try {
-                    String name = nameUserButton.getText();
-                    String destinatario = name.replace(":", "");
+                    String name = nameUserButton.getText(); // Obtener el texto del botón
+                    String destinatario = name.replace(":", ""); // Quitar ":" del nombre
                     if (e.getClickCount() == 2 && !destinatario.equals(userName) && !destinatario.equals("server")) {
-                        clientServer.openDMFrame(name);
-                        clientServer.sendOpenDM(destinatario, userName);
+                        clientServer.openDMFrame(name); // Abrir ventana de DM
+                        clientServer.sendOpenDM(destinatario, userName); // Enviar mensaje para abrir DM
                     }
                 } catch (IOException ioe) {
-                    ioe.getStackTrace();
+                    ioe.getStackTrace(); // Manejo de excepciones
                 }
-
             }
         });
-
-        // Crear el label a la derecha
+        // Crear el label para el mensaje
         JLabel resUserLb = new JLabel(msg);
         resUserLb.setFont(mainFont);
-        resUserLb.setPreferredSize(new Dimension(300, 20));
-
-        // Establecer tamaño preferido y fondo del panel
+        resUserLb.setPreferredSize(new Dimension(300, 20)); // Establecer tamaño preferido
+        // Establecer tamaño preferido del panel
         resPanelU.setPreferredSize(new Dimension(400, 20));
-        // resPanelU.setBackground(new Color(135, 206, 250));
-
         // Añadir los componentes al panel (botón a la izquierda, label a la derecha)
         resPanelU.add(nameUserButton);
         resPanelU.add(resUserLb);
-        return resPanelU;
+        return resPanelU; // Retornar el panel creado
     }
 
+    // Método para renderizar las respuestas en el panel
     public void renderRes(String answer) {
-
-        String[] tokens = answer.split("\\^");
-
+        String[] tokens = answer.split("\\^"); // Dividir la respuesta en tokens
         JPanel resPanelU;
-
-        resPanelU = createResPanel(tokens[0], tokens[1]);
-        resPanel.add(resPanelU);
-
-        // Añadir el panel al contenedor principal
+        resPanelU = createResPanel(tokens[0], tokens[1]); // Crear panel de respuesta
+        resPanel.add(resPanelU); // Añadir el panel de respuesta
         // Actualizar la interfaz gráfica
         SwingUtilities.updateComponentTreeUI(resPanel);
     }
 
+    // Método para eliminar un usuario de la lista
     public void deleteUserList(String message) {
-        String[] tokens = message.split("\\^");
-        String userDelete = null;
+        String[] tokens = message.split("\\^"); // Dividir el mensaje en tokens
+        String userDelete = null; // Usuario a eliminar
         for (String user : userList) {
             if (user.equals(tokens[2])) {
-                userDelete = user;
+                userDelete = user; // Encontrar el usuario a eliminar
             }
         }
-        if (!userDelete.equals(null)) {
-            userList.remove(userDelete);
-            deleteUserPanelList(userDelete);
+        if (userDelete != null) {
+            userList.remove(userDelete); // Eliminar usuario de la lista
+            deleteUserPanelList(userDelete); // Eliminar panel del usuario
         }
     }
 
+    // Método para eliminar el panel de un usuario específico
     public void deleteUserPanelList(String userDelete) {
-        JPanel deletePanel = null;
+        JPanel deletePanel = null; // Panel a eliminar
         for (JPanel listPanel : listPanels) {
             // Obtén el segundo componente, que es nameUserButton
             Component secondComponent = listPanel.getComponent(1);
-
             // Verifica si es un JButton y obtén su texto
             if (secondComponent instanceof JButton) {
                 JButton nameUserButton = (JButton) secondComponent;
-                String userConnected = nameUserButton.getText();
+                String userConnected = nameUserButton.getText(); // Obtener el texto del botón
                 if (userConnected.equals(userDelete)) {
-                    System.out.println("llego aqui");
-                    deletePanel = listPanel;
+                    deletePanel = listPanel; // Encontrar el panel del usuario a eliminar
                 }
             }
         }
         if (deletePanel != null) {
-            listPanels.remove(deletePanel);
-            titlePanel.remove(deletePanel);
-            SwingUtilities.updateComponentTreeUI(titlePanel);
+            listPanels.remove(deletePanel); // Eliminar el panel de la lista
+            titlePanel.remove(deletePanel); // Eliminar el panel del título
+            SwingUtilities.updateComponentTreeUI(titlePanel); // Actualizar interfaz gráfica
         }
-
     }
 
+    // Método para añadir un usuario a la lista
     public void addUserList(String message) {
-        String[] tokens = message.split("\\^");
+        String[] tokens = message.split("\\^"); // Dividir el mensaje en tokens
         for (String user : userList) {
             if (user.equals(tokens[2])) {
-                return;
+                return; // Si el usuario ya está en la lista, salir del método
             }
         }
-        userList.add(tokens[2]);
-        renderList(message);
-
+        userList.add(tokens[2]); // Añadir usuario a la lista
+        renderList(message); // Renderizar la lista actualizada
     }
 
+    // Método para renderizar la lista de usuarios
     public void renderList(String message) {
-        String[] tokens = message.split("\\^");
-
+        String[] tokens = message.split("\\^"); // Dividir el mensaje en tokens
         JPanel listPanel;
-
-        listPanel = createListPanel("-", tokens[2], " is connected");
-        titlePanel.add(listPanel);
-        listPanels.add(listPanel);
-        System.out.println("user added");
-
-        SwingUtilities.updateComponentTreeUI(titlePanel);
-
+        listPanel = createListPanel("-", tokens[2], " is connected"); // Crear panel para el usuario
+        titlePanel.add(listPanel); // Añadir panel al título
+        listPanels.add(listPanel); // Añadir panel a la lista de paneles
+        SwingUtilities.updateComponentTreeUI(titlePanel); // Actualizar interfaz gráfica
     }
-
 }
