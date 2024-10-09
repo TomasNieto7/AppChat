@@ -570,20 +570,6 @@ public class MainFrame extends JFrame {
 
                             break;
                     }
-                    // if (messageFromServer.startsWith("dm")) {
-                    //     renderResDM(messageFromServer);
-                    // } else if (messageFromServer.startsWith("openDM")) {
-                    //     openDM(tokens[1]);
-                    // } else if (tokens[0].equals("d")) {
-                    //     receiverDoc(tokens);
-                    // } else if (tokens[0].equals("ddm")) {
-                    //     receiverDocDM(tokens);
-                    //     renderList(messageFromServer);
-                    // } else if (tokens[0].equals("l")) {
-                    //     renderList(messageFromServer);
-                    // } else {
-                    //     renderRes(messageFromServer);
-                    // }
 
                 }
             } catch (IOException ioe) {
