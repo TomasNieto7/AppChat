@@ -157,7 +157,7 @@ public class ChatPrivado {
         try {
             String[] tokens = answer.split("\\^");
             String msg = "";
-            if (tokens[0].equals("ddm")) {
+            if (tokens[0].equals("ddm") || tokens[2].contains(".")) {
                 msg = tokens[2];
             }else{
                 msg = CifradoAES.desencriptar(tokens[2], CifradoAES.toSecretKey(tokens[3]));
