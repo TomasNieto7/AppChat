@@ -256,7 +256,7 @@ public class ClientServer {
             totalBytesRead += bytesRead;
         }
 
-        // renderResDM(tokens[0] + "^" + tokens[1] + "^" + tokens[2]);
+        chatPrivado.renderResDM(tokens[0] + "^" + tokens[1] + "^" + tokens[2]);
         fileOutputStream.close();
     }
 

@@ -156,8 +156,12 @@ public class ChatPrivado {
 
         try {
             String[] tokens = answer.split("\\^");
-            System.out.println(tokens[3]);
-            String msg = CifradoAES.desencriptar(tokens[2], CifradoAES.toSecretKey(tokens[3]));
+            String msg = "";
+            if (tokens[0].equals("dm") || tokens[0].equals("ddm")) {
+                msg = tokens[2];
+            }else{
+                msg = CifradoAES.desencriptar(tokens[2], CifradoAES.toSecretKey(tokens[3]));
+            }
             String[] tokensEmisorDestinatario = tokens[1].split("-");
             JFrame frameDM = getDmFrame(dmsFrame, tokensEmisorDestinatario[0], tokensEmisorDestinatario[1]);
             if (frameDM != null) {
