@@ -38,7 +38,8 @@ public class ClientServer {
 
     // Método main que establece la conexión con el servidor y ejecuta el cliente
     public static void main(String[] args) throws IOException {
-        Socket socket = new Socket(args[0], Integer.parseInt(args[1])); // Conecta al servidor usando la dirección y puerto proporcionados
+        Socket socket = new Socket(args[0], Integer.parseInt(args[1])); // Conecta al servidor usando la dirección y
+                                                                        // puerto proporcionados
         ClientServer clientServer = new ClientServer(socket, args[2].toLowerCase()); // Crea una instancia del cliente
         clientServer.running(args); // Ejecuta el método para mantener al cliente en funcionamiento
     }
@@ -126,7 +127,7 @@ public class ClientServer {
                             chatGlobal.renderRes(tokens[1] + "^" + tokens[2]); // Renderiza un mensaje del chat global
                             break;
                         case "u":
-                            if (flag==false) {
+                            if (flag == false) {
                                 System.out.println("Usuario ya registrado");
                                 System.exit(0);
                             }
@@ -171,9 +172,9 @@ public class ClientServer {
             File file = new File(doc); // Crea un objeto File con la ruta proporcionada
             // Verifica si el archivo existe
             if (file.exists()) {
-                output.writeUTF("d^" + doc); // Envía el prefijo del documento
-                long fileSize = file.length();  // Obtener el tamaño del archivo
+                long fileSize = file.length(); // Obtener el tamaño del archivo
                 if (fileSize <= 50000000) { // Verifica si el tamaño del archivo es menor o igual a 50MB
+                    output.writeUTF("d^" + doc); // Envía el prefijo del documento
                     // Envía el tamaño del archivo
                     DataOutputStream netOutDoc = new DataOutputStream(socket.getOutputStream());
                     netOutDoc.writeLong(fileSize); // Envía el tamaño del archivo
@@ -187,7 +188,8 @@ public class ClientServer {
                     fileInputStream.close(); // Cierra el flujo de entrada del archivo
                 } else {
                     // Muestra un mensaje de alerta si el archivo es demasiado grande
-                    JOptionPane.showMessageDialog(null, "Ups, este archivo supera el tamaño máximo (50MB)", "Alerta", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Ups, este archivo supera el tamaño máximo (50MB)", "Alerta",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             } else {
                 // Muestra un mensaje de alerta si el archivo no se encuentra
@@ -202,12 +204,14 @@ public class ClientServer {
     public void receiverDoc(String[] tokens) throws IOException {
         // Recibir archivo
         InputStream inputStream = socket.getInputStream(); // Obtiene el flujo de entrada del socket
-        DataInputStream dataInputStream = new DataInputStream(inputStream); // Crea un DataInputStream para leer el archivo
+        DataInputStream dataInputStream = new DataInputStream(inputStream); // Crea un DataInputStream para leer el
+                                                                            // archivo
 
         // Leer el tamaño del archivo
         long fileSize = dataInputStream.readLong(); // Lee el tamaño del archivo
 
-        FileOutputStream fileOutputStream = new FileOutputStream(tokens[2]); // Crea un flujo de salida para guardar el archivo
+        FileOutputStream fileOutputStream = new FileOutputStream(tokens[2]); // Crea un flujo de salida para guardar el
+                                                                             // archivo
         byte[] buffer = new byte[4096]; // Buffer para leer el archivo
         int bytesRead;
         long totalBytesRead = 0; // Contador de bytes leídos
@@ -228,10 +232,10 @@ public class ClientServer {
             File file = new File(tokens[1]); // Crea un objeto File con la ruta del documento
             // Verifica si el archivo existe
             if (file.exists()) {
-                output.writeUTF("ddm^" + doc); // Envía el prefijo del documento directo
 
-                long fileSize = file.length();  // Obtener el tamaño del archivo
+                long fileSize = file.length(); // Obtener el tamaño del archivo
                 if (fileSize <= 50000000) { // Verifica si el tamaño del archivo es menor o igual a 50MB
+                    output.writeUTF("ddm^" + doc); // Envía el prefijo del documento directo
                     // Enviar el tamaño del archivo
                     DataOutputStream netOutDoc = new DataOutputStream(socket.getOutputStream());
                     netOutDoc.writeLong(fileSize); // Envía el tamaño del archivo
@@ -247,7 +251,8 @@ public class ClientServer {
                     fileInputStream.close(); // Cierra el flujo de entrada del archivo
                 } else {
                     // Muestra un mensaje de alerta si el archivo es demasiado grande
-                    JOptionPane.showMessageDialog(null, "Ups, este archivo supera el tamaño máximo (50MB)", "Alerta", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Ups, este archivo supera el tamaño máximo (50MB)", "Alerta",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             } else {
                 // Muestra un mensaje de alerta si el archivo no se encuentra
@@ -262,12 +267,14 @@ public class ClientServer {
     public void receiverDocDM(String[] tokens) throws IOException {
         // Recibir archivo
         InputStream inputStream = socket.getInputStream(); // Obtiene el flujo de entrada del socket
-        DataInputStream dataInputStream = new DataInputStream(inputStream); // Crea un DataInputStream para leer el archivo
+        DataInputStream dataInputStream = new DataInputStream(inputStream); // Crea un DataInputStream para leer el
+                                                                            // archivo
 
         // Leer el tamaño del archivo
         long fileSize = dataInputStream.readLong(); // Lee el tamaño del archivo
 
-        FileOutputStream fileOutputStream = new FileOutputStream(tokens[2]); // Crea un flujo de salida para guardar el archivo
+        FileOutputStream fileOutputStream = new FileOutputStream(tokens[2]); // Crea un flujo de salida para guardar el
+                                                                             // archivo
         byte[] buffer = new byte[4096]; // Buffer para leer el archivo
         int bytesRead;
         long totalBytesRead = 0; // Contador de bytes leídos
@@ -278,7 +285,8 @@ public class ClientServer {
             totalBytesRead += bytesRead; // Actualiza el total de bytes leídos
         }
 
-        chatPrivado.renderResDM(tokens[0] + "^" + tokens[1] + "^" + tokens[2]); // Renderiza la respuesta en el chat privado
+        chatPrivado.renderResDM(tokens[0] + "^" + tokens[1] + "^" + tokens[2]); // Renderiza la respuesta en el chat
+                                                                                // privado
         fileOutputStream.close(); // Cierra el flujo de salida del archivo
     }
 
