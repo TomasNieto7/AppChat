@@ -24,6 +24,7 @@ public class ClientServer {
     private ChatPrivado chatPrivado; // Objeto para manejar los chats privados
     private List<JFrame> dmsFrame = new ArrayList<>(); // Lista para almacenar las ventanas de chats privados
     private List<JPanel> dmsPanel = new ArrayList<>(); // Lista para almacenar los paneles de chats privados
+    private boolean flag = false; // Lista para almacenar los paneles de chats privados
 
     // Constructor que inicializa el socket y los streams de entrada y salida
     public ClientServer(Socket socket, String username) throws IOException {
@@ -48,7 +49,7 @@ public class ClientServer {
         String user = args[2].toLowerCase(); // Extrae el nombre de usuario
         String host = args[0]; // Extrae la dirección del host
         connectedClient(host, port, user); // Conecta al cliente al servidor
-        
+
         // Agregar un shutdown hook para manejar la desconexión del cliente
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
@@ -65,7 +66,7 @@ public class ClientServer {
                 ioe.getStackTrace(); // Manejo de excepciones
             }
         }));
-        
+
         // Mantiene al cliente en ejecución
         try {
             Thread.sleep(Long.MAX_VALUE); // Suspende el hilo indefinidamente
@@ -116,12 +117,19 @@ public class ClientServer {
                             break;
                         case "j":
                             chatGlobal.addUserList(messageFromServer); // Agrega un usuario que se unió
+                            flag = true;
                             break;
                         case "p":
                             chatGlobal.deleteUserList(messageFromServer); // Elimina un usuario de la lista
                             break;
                         case "m":
                             chatGlobal.renderRes(tokens[1] + "^" + tokens[2]); // Renderiza un mensaje del chat global
+                            break;
+                        case "u":
+                            if (flag==false) {
+                                System.out.println("Usuario ya registrado");
+                                System.exit(0);
+                            }
                             break;
                         default:
                             System.out.println("default"); // Manejo de caso por defecto
@@ -311,4 +319,3 @@ public class ClientServer {
         }
     }
 }
-

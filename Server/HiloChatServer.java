@@ -114,7 +114,8 @@ public class HiloChatServer implements Runnable {
 
     private HiloChatServer getClientByName(String name) {
         for (HiloChatServer client : chatServer.getHilosChats()) {  // Buscar un cliente por su nombre en la lista de hilos de chat
-            if (client.getName().equals(name)) {
+            String clientName = client.getName();
+            if (clientName!=null && clientName.equals(name)) {
                 return client;  // Retornar el cliente si coincide el nombre
             }
         }
@@ -256,6 +257,11 @@ public class HiloChatServer implements Runnable {
         }
     }
 
+    private boolean validateName(String name) {
+        HiloChatServer client = getClientByName(name);
+        return client != null;
+    }
+
     private String options(String res, String[] tokens) throws IOException {
         switch (tokens[0]) {
             case "p":  // Caso para desconectar a un cliente
@@ -266,10 +272,19 @@ public class HiloChatServer implements Runnable {
                 res += "left";  // Notificar que el cliente se ha desconectado
                 break;
             case "j":  // Caso para unirse al servidor
-                name = tokens[1];  // Asignar el nombre del cliente
-                res = "j^server:^";
-                res += name + "^";
-                res += "joined";  // Notificar que el cliente se ha unido
+                if (validateName(tokens[1])) {
+                    res = "u^server:^";
+                    res += name + "^";
+                    res += "esta ocupado";  // Notificar que el cliente se ha unido
+                    netOut = new DataOutputStream(socket.getOutputStream());
+                    netOut.writeUTF(res);
+                    res += "-1";
+                } else {
+                    name = tokens[1];  // Asignar el nombre del cliente
+                    res = "j^server:^";
+                    res += name + "^";
+                    res += "joined";  // Notificar que el cliente se ha unido
+                }
                 break;
             case "m":  // Caso para un mensaje público
                 res = "m^";
